@@ -3,6 +3,7 @@ import os
 
 from dotenv import load_dotenv
 from langchain.chat_models import init_chat_model
+from langchain_core.tools import tool
 
 load_dotenv("../.env")  # 加载环境变量
 
@@ -16,12 +17,15 @@ model = init_chat_model(
     base_url=os.getenv("DEEPSEEK_API_BASE_URL"),
 )
 
+@tool
 def get_weather(city: str):
-
-
     """获取天气的工具"""
     return f"{city}天气晴朗"
+
+from langchain.tools import tool
+
 # 将模型和工具绑定
+
 model_with_tools = model.bind_tools([get_weather])
 messages = [
     HumanMessage("今天北京天气如何")
@@ -31,15 +35,24 @@ response = model_with_tools.invoke(messages)
 # 添加AIMessage
 messages.append(response)
 tool_calls = response.tool_calls
+
 for tool_call in tool_calls:
     if tool_call["name"] == "get_weather":
-# 拼接出ToolMessage实例
-        tool_response = ToolMessage(
-            content=get_weather(**tool_call["args"]),
-            tool_call_id=tool_call["id"],
-            name=tool_call["name"]
-        )
-messages.append(tool_response)
+        tool_response = get_weather.invoke(tool_call) # 调用工具，自动封装toolmessage
+        print(type(tool_response))
+        messages.append(tool_response)
+
+# for tool_call in tool_calls:
+#     if tool_call["name"] == "get_weather":
+# # 拼接出ToolMessage实例
+#         tool_response = ToolMessage(
+#             content=get_weather(**tool_call["args"]),
+#             tool_call_id=tool_call["id"],
+#             name=tool_call["name"]
+#         )
+#         messages.append(tool_response)
+
+
 
 print("=====================> messages <=====================")
 for msg in messages:

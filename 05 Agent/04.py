@@ -12,6 +12,16 @@ config = {
         "thread_id": "1"
     }
 }
+config2 = {
+    "configurable": {
+        "thread_id": "2"
+    }
+}
+response4 = agent.invoke(
+    {"messages": [HumanMessage("你还记得我叫什么名字么？")]},
+    config=config2
+)
+print(response4['messages'][-1].content)
 print("\n第一轮对话：")
 response1 = agent.invoke({
     "messages": [HumanMessage("我叫张三")]},
